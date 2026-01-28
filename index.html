@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VietQR Pro - Telegram Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #0088cc; --bg: #f4f7f9; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .app-container { background: #fff; width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #1c1c1c; margin-bottom: 20px; font-size: 1.2rem; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 11px; font-weight: 700; color: #8e8e93; margin-bottom: 5px; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #e5e5ea; border-radius: 10px; font-size: 14px; box-sizing: border-box; background: #f9f9f9; }
+        input:focus { border-color: var(--primary); outline: none; background: #fff; }
+        .search-bank { margin-bottom: 10px; border-color: var(--primary); }
+        .bank-list { max-height: 150px; overflow-y: auto; border: 1px solid #e5e5ea; border-radius: 10px; background: #fff; }
+        .bank-item { padding: 10px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; gap: 10px; }
+        .bank-item:hover { background: #f0f7ff; }
+        .bank-item img { width: 24px; height: 24px; object-fit: contain; }
+        .btn-send { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 10px; }
+        .selected-bank-display { padding: 10px; background: #eef7ff; border-radius: 8px; font-size: 13px; font-weight: 600; color: #005fa3; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h2>CẤU HÌNH VIETQR</h2>
+    
+    <div class="input-group">
+        <label>Tìm & Chọn Ngân hàng</label>
+        <input type="text" id="search" class="search-bank" placeholder="Gõ tên ngân hàng (vd: vcb, mb...)" oninput="filterBanks()">
+        <div class="bank-list" id="bank-list"></div>
+    </div>
+
+    <div id="selected-info" class="selected-bank-display"></div>
+    <input type="hidden" id="bank-code">
+
+    <div class="input-group">
+        <label>Số tài khoản</label>
+        <input type="text" id="acc" placeholder="Nhập STK thụ hưởng">
+    </div>
+
+    <div class="input-group">
+        <label>Số tiền (Không bắt buộc)</label>
+        <input type="number" id="amount" placeholder="Ví dụ: 100000">
+    </div>
+
+    <div class="input-group">
+        <label>Nội dung</label>
+        <input type="text" id="des" placeholder="VIET HOA KHONG DAU">
+    </div>
+
+    <button class="btn-send" onclick="sendData()">XÁC NHẬN & GỬI BOT</button>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    const banks = [
+        {c: "VCB", n: "Vietcombank"}, {c: "ICB", n: "VietinBank"}, {c: "BIDV", n: "BIDV"},
+        {c: "MB", n: "MBBank"}, {c: "TCB", n: "Techcombank"}, {c: "ACB", n: "ACB"},
+        {c: "VPB", n: "VPBank"}, {c: "STB", n: "Sacombank"}, {c: "TPB", n: "TPBank"},
+        {c: "VIB", n: "VIB"}, {c: "HDB", n: "HDBank"}, {c: "SHB", n: "SHB"},
+        {c: "LPB", n: "LPBank"}, {c: "MSB", n: "MSB"}, {c: "OCB", n: "OCB"},
+        {c: "SCB", n: "SCB"}, {c: "SEA", n: "SeABank"}, {c: "NAB", n: "NamABank"},
+        {c: "VAB", n: "VietABank"}, {c: "NVB", n: "NCB"}, {c: "ABB", n: "ABBANK"},
+        {c: "BAB", n: "BacABank"}, {c: "PGB", n: "PGBank"}, {c: "VCCB", n: "Bản Việt"},
+        {c: "PVB", n: "PVcomBank"}, {c: "SGB", n: "SaigonBank"}, {c: "BVB", n: "BaoVietBank"}
+    ];
+
+    function filterBanks() {
+        const term = document.getElementById('search').value.toLowerCase();
+        const container = document.getElementById('bank-list');
+        container.innerHTML = '';
+        banks.filter(b => b.n.toLowerCase().includes(term) || b.c.toLowerCase().includes(term))
+             .forEach(b => {
+                const div = document.createElement('div');
+                div.className = 'bank-item';
+                div.innerHTML = `<img src="https://api.vietqr.io/img/${b.c}.png" onerror="this.style.display='none'"> <span>${b.n} (${b.c})</span>`;
+                div.onclick = () => selectBank(b.c, b.n);
+                container.appendChild(div);
+             });
+    }
+
+    function selectBank(code, name) {
+        document.getElementById('bank-code').value = code;
+        const info = document.getElementById('selected-info');
+        info.innerText = "Đã chọn: " + name;
+        info.style.display = 'block';
+        document.getElementById('bank-list').innerHTML = '';
+        document.getElementById('search').value = '';
+    }
+
+    function sendData() {
+        const data = {
+            bank: document.getElementById('bank-code').value,
+            acc: document.getElementById('acc').value,
+            amount: document.getElementById('amount').value,
+            des: document.getElementById('des').value
+        };
+        if(!data.bank || !data.acc) return alert("Thiếu Ngân hàng hoặc STK!");
+        tg.sendData(JSON.stringify(data));
+        tg.close();
+    }
+
+    filterBanks(); // Hiển thị danh sách ban đầu
+</script>
+</body>
+</html>
