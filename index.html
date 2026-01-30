@@ -3,111 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VietQR Pro - Telegram Mini App</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Create QR by Pisces.</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #0088cc; --bg: #f4f7f9; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; justify-content: center; }
-        .app-container { background: #fff; width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        h2 { text-align: center; color: #1c1c1c; margin-bottom: 20px; font-size: 1.2rem; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 11px; font-weight: 700; color: #8e8e93; margin-bottom: 5px; text-transform: uppercase; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #e5e5ea; border-radius: 10px; font-size: 14px; box-sizing: border-box; background: #f9f9f9; }
-        input:focus { border-color: var(--primary); outline: none; background: #fff; }
-        .search-bank { margin-bottom: 10px; border-color: var(--primary); }
-        .bank-list { max-height: 150px; overflow-y: auto; border: 1px solid #e5e5ea; border-radius: 10px; background: #fff; }
-        .bank-item { padding: 10px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; gap: 10px; }
-        .bank-item:hover { background: #f0f7ff; }
-        .bank-item img { width: 24px; height: 24px; object-fit: contain; }
-        .btn-send { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 10px; }
-        .selected-bank-display { padding: 10px; background: #eef7ff; border-radius: 8px; font-size: 13px; font-weight: 600; color: #005fa3; margin-bottom: 10px; display: none; }
+        :root { --primary-color: #2563eb; --bg-color: #f8fafc; --radius: 20px; --text-main: #1e293b; --text-sub: #64748b; }
+        body { font-family: 'Inter', sans-serif; background: #e2e8f0; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .main-container { display: grid; grid-template-columns: 420px 500px; background: #fff; border-radius: var(--radius); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); overflow: visible; max-width: 1000px; }
+        .form-section { padding: 40px; border-right: 1px solid #f1f5f9; max-height: 90vh; overflow-y: auto; }
+        .section-title { font-size: 11px; font-weight: 800; color: var(--primary-color); letter-spacing: 1.5px; margin: 25px 0 15px 0; display: flex; align-items: center; gap: 8px; }
+        .section-title::after { content: ""; height: 1px; flex: 1; background: #e2e8f0; }
+        .input-group { margin-bottom: 20px; position: relative; }
+        .input-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
+        .input-group input { width: 100%; padding: 14px; border: 2px solid #f1f5f9; border-radius: 12px; box-sizing: border-box; font-size: 15px; transition: 0.3s; background: #f8fafc; }
+        .input-group input:focus { border-color: var(--primary-color); outline: none; background: #fff; box-shadow: 0 4px 12px rgba(37,99,235,0.1); }
+        
+        /* Dropdown Ngân hàng */
+        .custom-select { position: relative; }
+        .selected-box { display: flex; align-items: center; gap: 12px; padding: 12px; border: 2px solid #f1f5f9; border-radius: 12px; cursor: pointer; background: #f8fafc; min-height: 50px; box-sizing: border-box; }
+        .dropdown-content { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; margin-top: 5px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; z-index: 9999; }
+        .custom-select.active .dropdown-content { display: block; }
+        .options-wrapper { max-height: 250px; overflow-y: auto; }
+        .bank-option { display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; border-bottom: 1px solid #f8fafc; }
+        .bank-option:hover { background: #eff6ff; }
+        .bank-option img { width: 30px; height: auto; border-radius: 4px; }
+
+        /* Chips Tiền */
+        .amount-chips { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .chip { padding: 8px 15px; background: #f1f5f9; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: 0.2s; }
+        .chip:hover { background: var(--primary-color); color: #fff; }
+
+        /* Preview Area */
+        .preview-section { background: #f1f5f9; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .mockup-container { position: relative; width: 100%; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        #anh-nen-goc { width: 100%; display: block; }
+        #ma-qr-dong { position: absolute; top: 33%; left: 4%; width: 26.5%; border-radius: 4px; display: none; }
+
+        .btn-create { width: 100%; padding: 16px; background: var(--primary-color); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .button-group { display: flex; gap: 10px; width: 100%; margin-top: 15px; }
+        .btn-action { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 13px; }
+        .btn-download { background: #10b981; color: white; display: none; }
+        .btn-copy { background: #6366f1; color: white; display: none; }
+
+        @media (max-width: 900px) { .main-container { grid-template-columns: 1fr; } .form-section { border-right: none; } }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <h2>CẤU HÌNH VIETQR</h2>
-    
-    <div class="input-group">
-        <label>Tìm & Chọn Ngân hàng</label>
-        <input type="text" id="search" class="search-bank" placeholder="Gõ tên ngân hàng (vd: vcb, mb...)" oninput="filterBanks()">
-        <div class="bank-list" id="bank-list"></div>
+    <div class="main-container">
+        <div class="form-section">
+            <h2 style="margin:0; font-size: 1.5rem;">Tạo QR</h2>
+            
+            <div class="section-title">THÔNG TIN THỤ HƯỞNG</div>
+            
+            <div class="input-group">
+                <label>Ngân hàng nhận</label>
+                <div class="custom-select" id="bank-select">
+                    <div class="selected-box" id="select-trigger">
+                        <img src="" id="current-logo" style="display:none; width:25px">
+                        <span id="current-name" style="color:var(--text-sub)">Chọn ngân hàng...</span>
+                    </div>
+                    <div class="dropdown-content">
+                        <div style="padding:10px;"><input type="text" id="bank-search" placeholder="Tìm tên hoặc mã BIN..." style="width:100%; padding:8px; border-radius:8px; border:1px solid #e2e8f0;" onclick="event.stopPropagation()"></div>
+                        <div class="options-wrapper" id="options-container"></div>
+                    </div>
+                </div>
+                <input type="hidden" id="ngan-hang-val">
+            </div>
+
+            <div class="input-group">
+                <label>Số tài khoản</label>
+                <input type="text" id="so-tai-khoan" placeholder="Ví dụ: 0123456789">
+            </div>
+
+            <div class="input-group">
+                <label>Tên chủ tài khoản</label>
+                <input type="text" id="ten-tk" placeholder="Viết hoa không dấu" oninput="this.value = this.value.toUpperCase()">
+            </div>
+
+            <div class="section-title">CHI TIẾT GIAO DỊCH</div>
+
+            <div class="input-group">
+                <label>Số tiền chuyển (VNĐ)</label>
+                <input type="text" id="tien-format" placeholder="0" oninput="dinhDangTien(this)">
+                <input type="hidden" id="tien-value">
+                <div class="amount-chips">
+                    <div class="chip" onclick="setAmount(2000000)">2tr</div>
+                    <div class="chip" onclick="setAmount(5000000)">5tr</div>
+                    <div class="chip" onclick="setAmount(10000000)">10tr</div>
+                    <div class="chip" onclick="setAmount(20000000)">20tr</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Nội dung</label>
+                <input type="text" id="noi-dung" placeholder="Không bắt buộc">
+            </div>
+
+            <button class="btn-create" onclick="taoQR(this)">TẠO QR</button>
+        </div>
+
+        <div class="preview-section">
+            <div class="mockup-container">
+                <img src="background.jpg" id="anh-nen-goc">
+                <img id="ma-qr-dong" src="" crossorigin="anonymous">
+            </div>
+            <div class="button-group">
+                <button class="btn-action btn-download" id="btn-tai-anh" onclick="taiAnhCanvas()">DOWNLOAD</button>
+                <button class="btn-action btn-copy" id="btn-copy-anh" onclick="saoChepAnhCanvas(this)">COPPY ẢNH</button>
+            </div>
+        </div>
     </div>
 
-    <div id="selected-info" class="selected-bank-display"></div>
-    <input type="hidden" id="bank-code">
+    <script>
+        // Danh sách đầy đủ đồng bộ với banklogo của bạn
+        const allBanks = [
+            {code: "ICB", bin: "970415", shortName: "VietinBank", name: "Công thương"},
+            {code: "VCB", bin: "970436", shortName: "Vietcombank", name: "Ngoại thương"},
+            {code: "MB", bin: "970422", shortName: "MBBank", name: "Quân đội"},
+            {code: "ACB", bin: "970416", shortName: "ACB", name: "Á Châu"},
+            {code: "VPB", bin: "970432", shortName: "VPBank", name: "Thịnh Vượng"},
+            {code: "TPB", bin: "970423", shortName: "TPBank", name: "Tiên Phong"},
+            {code: "MSB", bin: "970426", shortName: "MSB", name: "Hàng Hải"},
+            {code: "NAB", bin: "970428", shortName: "NamABank", name: "Nam Á"},
+            {code: "LPB", bin: "970449", shortName: "LPBank", name: "Bưu Điện Liên Việt"},
+            {code: "VCCB", bin: "970454", shortName: "VietCapitalBank", name: "Bản Việt"},
+            {code: "BIDV", bin: "970418", shortName: "BIDV", name: "Đầu tư"},
+            {code: "STB", bin: "970403", shortName: "Sacombank", name: "Sài Gòn Thương Tín"},
+            {code: "VIB", bin: "970441", shortName: "VIB", name: "Quốc tế"},
+            {code: "HDB", bin: "970437", shortName: "HDBank", name: "Phát triển"},
+            {code: "SEAB", bin: "970440", shortName: "SeABank", name: "Đông Nam Á"},
+            {code: "GPB", bin: "970408", shortName: "GPBank", name: "Dầu Khí"},
+            {code: "PVCB", bin: "970412", shortName: "PVcomBank", name: "Đại chúng"},
+            {code: "NCB", bin: "970419", shortName: "NCB", name: "Quốc Dân"},
+            {code: "SHBVN", bin: "970424", shortName: "ShinhanBank", name: "Shinhan Việt Nam"},
+            {code: "SCB", bin: "970429", shortName: "SCB", name: "Sài Gòn"},
+            {code: "PGB", bin: "970430", shortName: "PGBank", name: "Petrolimex"},
+            {code: "VBA", bin: "970405", shortName: "Agribank", name: "Nông nghiệp"},
+            {code: "TCB", bin: "970407", shortName: "Techcombank", name: "Kỹ thương"},
+            {code: "SGICB", bin: "970400", shortName: "SaigonBank", name: "Sài Gòn Công Thương"},
+            {code: "DOB", bin: "970406", shortName: "DongABank", name: "Đông Á"},
+            {code: "BAB", bin: "970409", shortName: "BacABank", name: "Bắc Á"},
+            {code: "ABB", bin: "970425", shortName: "ABBANK", name: "An Bình"},
+            {code: "VAB", bin: "970427", shortName: "VietABank", name: "Việt Á"},
+            {code: "EIB", bin: "970431", shortName: "Eximbank", name: "Xuất Nhập khẩu"},
+            {code: "VIETBANK", bin: "970433", shortName: "VietBank", name: "Việt Nam Thương Tín"},
+            {code: "BVB", bin: "970438", shortName: "BaoVietBank", name: "Bảo Việt"},
+            {code: "SHB", bin: "970443", shortName: "SHB", name: "Sài Gòn - Hà Nội"},
+            {code: "OCB", bin: "970448", shortName: "OCB", name: "Phương Đông"},
+            {code: "KLB", bin: "970452", shortName: "KienLongBank", name: "Kiên Long"},
+            {code: "WVN", bin: "970457", shortName: "Woori", name: "Woori Việt Nam"},
+            {code: "COOPBANK", bin: "970446", shortName: "COOPBANK", name: "Hợp tác xã"}
+            // (Bạn có thể thêm tiếp các mã còn lại vào đây nếu cần)
+        ];
 
-    <div class="input-group">
-        <label>Số tài khoản</label>
-        <input type="text" id="acc" placeholder="Nhập STK thụ hưởng">
-    </div>
-
-    <div class="input-group">
-        <label>Số tiền (Không bắt buộc)</label>
-        <input type="number" id="amount" placeholder="Ví dụ: 100000">
-    </div>
-
-    <div class="input-group">
-        <label>Nội dung</label>
-        <input type="text" id="des" placeholder="VIET HOA KHONG DAU">
-    </div>
-
-    <button class="btn-send" onclick="sendData()">XÁC NHẬN & GỬI BOT</button>
-</div>
-
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    const banks = [
-        {c: "VCB", n: "Vietcombank"}, {c: "ICB", n: "VietinBank"}, {c: "BIDV", n: "BIDV"},
-        {c: "MB", n: "MBBank"}, {c: "TCB", n: "Techcombank"}, {c: "ACB", n: "ACB"},
-        {c: "VPB", n: "VPBank"}, {c: "STB", n: "Sacombank"}, {c: "TPB", n: "TPBank"},
-        {c: "VIB", n: "VIB"}, {c: "HDB", n: "HDBank"}, {c: "SHB", n: "SHB"},
-        {c: "LPB", n: "LPBank"}, {c: "MSB", n: "MSB"}, {c: "OCB", n: "OCB"},
-        {c: "SCB", n: "SCB"}, {c: "SEA", n: "SeABank"}, {c: "NAB", n: "NamABank"},
-        {c: "VAB", n: "VietABank"}, {c: "NVB", n: "NCB"}, {c: "ABB", n: "ABBANK"},
-        {c: "BAB", n: "BacABank"}, {c: "PGB", n: "PGBank"}, {c: "VCCB", n: "Bản Việt"},
-        {c: "PVB", n: "PVcomBank"}, {c: "SGB", n: "SaigonBank"}, {c: "BVB", n: "BaoVietBank"}
-    ];
-
-    function filterBanks() {
-        const term = document.getElementById('search').value.toLowerCase();
-        const container = document.getElementById('bank-list');
-        container.innerHTML = '';
-        banks.filter(b => b.n.toLowerCase().includes(term) || b.c.toLowerCase().includes(term))
-             .forEach(b => {
+function renderBanks(list) {
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            list.forEach(b => {
                 const div = document.createElement('div');
-                div.className = 'bank-item';
-                div.innerHTML = `<img src="https://api.vietqr.io/img/${b.c}.png" onerror="this.style.display='none'"> <span>${b.n} (${b.c})</span>`;
-                div.onclick = () => selectBank(b.c, b.n);
+                div.className = 'bank-option';
+                const logoPath = `banklogo/${b.code}.png`;
+                div.innerHTML = `<img src="${logoPath}" onerror="this.src='https://api.vietqr.io/img/${b.bin}.png'"> <span><strong>${b.shortName}</strong> - ${b.name}</span>`;
+                div.onmousedown = () => {
+                    document.getElementById('current-logo').src = logoPath;
+                    document.getElementById('current-logo').style.display = 'block';
+                    document.getElementById('current-name').innerText = b.shortName;
+                    document.getElementById('current-name').style.color = "#1e293b";
+                    document.getElementById('ngan-hang-val').value = b.bin;
+                    document.getElementById('bank-select').classList.remove('active');
+                };
                 container.appendChild(div);
-             });
-    }
+            });
+        }
 
-    function selectBank(code, name) {
-        document.getElementById('bank-code').value = code;
-        const info = document.getElementById('selected-info');
-        info.innerText = "Đã chọn: " + name;
-        info.style.display = 'block';
-        document.getElementById('bank-list').innerHTML = '';
-        document.getElementById('search').value = '';
-    }
+        function dinhDangTien(input) {
+            // Chỉ giữ lại số, cho phép xoá bình thường
+            let v = input.value.replace(/\D/g, "");
+            document.getElementById('tien-value').value = v;
+            input.value = v ? Number(v).toLocaleString('vi-VN') : "";
+        }
 
-    function sendData() {
-        const data = {
-            bank: document.getElementById('bank-code').value,
-            acc: document.getElementById('acc').value,
-            amount: document.getElementById('amount').value,
-            des: document.getElementById('des').value
+        function setAmount(val) {
+            document.getElementById('tien-format').value = val.toLocaleString('vi-VN');
+            document.getElementById('tien-value').value = val;
+        }
+
+        function taoQR(btn) {
+            const bank = document.getElementById('ngan-hang-val').value;
+            const acc = document.getElementById('so-tai-khoan').value;
+            if(!bank || !acc) return alert("Vui lòng chọn ngân hàng và nhập STK!");
+            
+            btn.innerText = "ĐANG TẠO...";
+            const amount = document.getElementById('tien-value').value;
+            const des = encodeURIComponent(document.getElementById('noi-dung').value);
+            const url = `https://qr.sepay.vn/img?acc=${acc}&bank=${bank}&amount=${amount}&des=${des}&template=qronly`;
+            
+            const img = document.getElementById('ma-qr-dong');
+            img.src = url;
+            img.onload = () => {
+                img.style.display = 'block';
+                document.getElementById('btn-tai-anh').style.display = 'block';
+                document.getElementById('btn-copy-anh').style.display = 'block';
+                btn.innerText = "CẬP NHẬT MÃ QR";
+            };
+        }
+
+        function getFullCanvas() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const bg = document.getElementById('anh-nen-goc');
+            const qr = document.getElementById('ma-qr-dong');
+            canvas.width = bg.naturalWidth;
+            canvas.height = bg.naturalHeight;
+            ctx.drawImage(bg, 0, 0);
+            const qrW = canvas.width * 0.265;
+            ctx.drawImage(qr, canvas.width * 0.04, canvas.height * 0.33, qrW, qrW);
+            return canvas;
+        }
+
+        function taiAnhCanvas() {
+            const c = getFullCanvas();
+            const l = document.createElement('a');
+            l.download = `QR_Thanh_Toan.jpg`;
+            l.href = c.toDataURL("image/jpeg", 0.95);
+            l.click();
+        }
+
+        async function saoChepAnhCanvas(btn) {
+            const originalText = btn.innerText;
+            try {
+                const c = getFullCanvas();
+                c.toBlob(async (blob) => {
+                    const item = new ClipboardItem({ "image/png": blob });
+                    await navigator.clipboard.write([item]);
+                    btn.innerText = "Đã sao chép ảnh!";
+                    setTimeout(() => btn.innerText = originalText, 2000);
+                });
+            } catch (err) {
+                alert("Hãy đẩy dự án lên GitHub Pages để dùng tính năng Sao Chép!");
+            }
+        }
+
+        document.getElementById('select-trigger').onclick = () => document.getElementById('bank-select').classList.toggle('active');
+        document.getElementById('bank-search').oninput = (e) => {
+            const t = e.target.value.toLowerCase();
+            renderBanks(allBanks.filter(b => b.shortName.toLowerCase().includes(t)));
         };
-        if(!data.bank || !data.acc) return alert("Thiếu Ngân hàng hoặc STK!");
-        tg.sendData(JSON.stringify(data));
-        tg.close();
-    }
-
-    filterBanks(); // Hiển thị danh sách ban đầu
-</script>
+        window.onclick = (e) => { if(!document.getElementById('bank-select').contains(e.target)) document.getElementById('bank-select').classList.remove('active'); };
+        renderBanks(allBanks);
+    </script>
 </body>
 </html>
